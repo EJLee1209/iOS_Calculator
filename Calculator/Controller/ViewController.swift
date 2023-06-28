@@ -41,7 +41,6 @@ final class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
-        
     }
 
     //MARK: - IBAction
@@ -61,8 +60,8 @@ final class ViewController: UIViewController {
             calculatorManager.percentage()
         default: // 연산자 (/,*,-,+,=)
             calculatorManager.operation(sender.tag)
-            
             resetButtonColor()
+            
             switch calculatorManager.getActivatedOperatorType() {
             case .divide:
                 divideButton.setTitleColor(UIColor(named: "orange"), for: .normal)
@@ -82,7 +81,6 @@ final class ViewController: UIViewController {
         }
         resultLabel.text = calculatorManager.getResult()
     }
- 
 }
 
 //MARK: - Custom Functions
@@ -94,6 +92,7 @@ extension ViewController {
             button.clipsToBounds = true
             button.layer.cornerRadius = r
         }
+        tabBarController?.tabBar.tintColor = .black
     }
     
     private func resetButtonColor() {

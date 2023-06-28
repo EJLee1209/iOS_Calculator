@@ -7,19 +7,20 @@
 
 import Foundation
 
-enum OperatorType {
-    case divide, multiple, minus, plus
+enum OperatorType: String {
+    case divide = " / "
+    case multiple = " * "
+    case minus = " - "
+    case plus = " + "
 }
-
 
 final class CalculatorManager {
     private var result = "0" // 연산 결과
     private var operand = "" // 피연산자
-    private var defaultOperand = "1" // 피연산자 디폴트값
-    private lazy var expression = "" // 계산식
-    
+    private var expression = "0"
     private var operatorType: OperatorType?
     
+    //MARK: - 싱글톤 패턴으로 공유 인스턴스 생성
     static let shared = CalculatorManager()
     private init() {}
 
@@ -46,22 +47,34 @@ final class CalculatorManager {
     }
     // 점
     func dot() {
-        if !result.contains(".") {
+        if !result.contains("."), operatorType == nil {
             result += "."
+        }
+        if operatorType != nil {
+            operand += "."
         }
     }
     
     // 초기화
     func ac() {
         result = "0"
+        operand = ""
         operatorType = nil
     }
     // 부호
     func sign() {
-        if result.first == "-" {
-            result.removeFirst()
+        if operatorType == nil {
+            if result.first == "-"{
+                result.removeFirst()
+            } else {
+                result = "-\(result)"
+            }
         } else {
-            result = "-\(result)"
+            if operand.first == "-"{
+                operand.removeFirst()
+            } else {
+                operand = "-\(operand)"
+            }
         }
     }
     // %
@@ -78,16 +91,12 @@ final class CalculatorManager {
         switch tag {
         case 13: // 나누기
             operatorType = .divide
-            defaultOperand = result
         case 14: // 곱하기
             operatorType = .multiple
-            defaultOperand = result
         case 15: // 빼기
             operatorType = .minus
-            defaultOperand = result
         case 16: // 더하기
             operatorType = .plus
-            defaultOperand = result
         case 17: // =
             self.calculate()
         default:
@@ -96,42 +105,31 @@ final class CalculatorManager {
     }
     
     private func calculate() {
+        guard let decimalOperand = Decimal(string: operand) else { return }
+        
         var newValue: Decimal?
         
         switch operatorType {
         case .divide:
-            if let decimalOperand = Decimal(string: operand) {
-                newValue = Decimal(string: result)! / decimalOperand
-            } else {
-                newValue = Decimal(string: result)! / Decimal(string: defaultOperand)!
-            }
+            newValue = Decimal(string: result)! / decimalOperand
         case .multiple:
-            if let decimalOperand = Decimal(string: operand) {
-                newValue = Decimal(string: result)! * decimalOperand
-            } else {
-                newValue = Decimal(string: result)! * Decimal(string: defaultOperand)!
-            }
+            newValue = Decimal(string: result)! * decimalOperand
         case .minus:
-            if let decimalOperand = Decimal(string: operand) {
-                newValue = Decimal(string: result)! - decimalOperand
-            } else {
-                newValue = Decimal(string: result)! - Decimal(string: defaultOperand)!
-            }
+            newValue = Decimal(string: result)! - decimalOperand
         case .plus:
-            if let decimalOperand = Decimal(string: operand) {
-                newValue = Decimal(string: result)! + decimalOperand
-            } else {
-                newValue = Decimal(string: result)! + Decimal(string: defaultOperand)!
-            }
+            newValue = Decimal(string: result)! + decimalOperand
         default:
             break
         }
+        
         if let newValue = newValue {
+            if let operatorType = operatorType {
+                let expression = "\(result)\(operatorType.rawValue)\(operand) = \(newValue)" // 저장할 수식
+                CoreDataManager.shared.saveExpression(expression: expression)
+            }
             result = String(Double(newValue.description)!)
         }
         operatorType = nil
         operand = ""
     }
-    
-    
 }
